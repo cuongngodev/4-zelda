@@ -29,7 +29,7 @@ export default class PlayerSwordSwingingState extends State {
 
 	enter() {
 		sounds.play(SoundName.Sword);
-		this.player.positionOffset = { x: -Player.WIDTH / 2, y: 0 };
+		this.player.positionOffset = { x: -Player.WIDTH / 2, y: 0 }; // apply this to avoid sprite swingging outside of tile
 		this.player.sprites = this.player.swordSwingingSprites;
 		this.player.currentAnimation = this.animation[this.player.direction];
 	}

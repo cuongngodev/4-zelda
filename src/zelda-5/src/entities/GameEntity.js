@@ -2,7 +2,7 @@ import Hitbox from "../../lib/Hitbox.js";
 import Vector from "../../lib/Vector.js";
 import Direction from "../enums/Direction.js";
 import { context, DEBUG } from "../globals.js";
-
+//sth
 export default class GameEntity {
 	/**
 	 * The base class to be extended by all entities in the game.
@@ -42,8 +42,15 @@ export default class GameEntity {
 			this.dimensions.y + this.hitboxOffsets.dimensions.y,
 		);
 	}
+	/**
+	 we need to provide offset object here because player sword 
+	swinging state changes the offset to avoid sprite swinging 
+	outside of tile as the size of the player sprite and sword 
+	swinging sprite are different
+	 * 
+	 */
 
-	render(offset = { x: 0, y: 0 }) {
+	render(offset = { x: 0, y: 0 }) { 
 		const x = this.position.x + offset.x;
 		const y = this.position.y + offset.y;
 
