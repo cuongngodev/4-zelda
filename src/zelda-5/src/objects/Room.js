@@ -13,6 +13,7 @@ import { CANVAS_HEIGHT, CANVAS_WIDTH, images } from '../globals.js';
 import Doorway from './Doorway.js';
 import Switch from './Switch.js';
 import Tile from './Tile.js';
+import Heart from '../entities/Heart.js';
 
 export default class Room {
 	static WIDTH = CANVAS_WIDTH / Tile.TILE_SIZE - 2;
@@ -65,7 +66,8 @@ export default class Room {
 		this.doorways = this.generateDoorways();
 		this.objects = this.generateObjects();
 		this.renderQueue = this.buildRenderQueue();
-
+		this.heart = new Heart()
+		
 		// Used for drawing when this room is the next room, adjacent to the active.
 		this.adjacentOffset = new Vector();
 
@@ -77,11 +79,12 @@ export default class Room {
 		this.cleanUpEntities();
 		this.updateEntities(dt);
 		this.updateObjects(dt);
+		this.checkConsumeHeart();
 	}
 
 	render() {
 		this.renderTiles();
-
+		this.heart.render();
 		this.renderQueue.forEach((elementToRender) => {
 			elementToRender.render(this.adjacentOffset);
 		});
@@ -116,15 +119,22 @@ export default class Room {
 			} else {
 				order = 1;
 			}
-
 			return order;
 		});
 	}
 
 	cleanUpEntities() {
 		this.entities = this.entities.filter((entity) => !entity.isDead);
+		
 	}
 
+	checkConsumeHeart() {
+		// Check if heart exists and player collides with it
+		if (this.heart && !this.heart.isDead && this.player.didCollideWithEntity(this.heart.hitbox)) {
+			this.heart.consume(this.player);
+			console.log("collide heart");
+		}
+	}
 	updateEntities(dt) {
 		this.entities.forEach((entity) => {
 			if (entity.health <= 0) {
@@ -165,6 +175,7 @@ export default class Room {
 				this.player.becomeInvulnerable();
 			}
 		});
+		
 	}
 
 	updateObjects(dt) {
@@ -310,7 +321,6 @@ export default class Room {
 		for (let i = 0; i < 10; i++) {
 			entities.push(EnemyFactory.createInstance(enemyType, sprites));
 		}
-
 		entities.push(this.player);
 
 		return entities;
