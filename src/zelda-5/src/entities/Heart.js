@@ -22,11 +22,28 @@ export default class Heart extends GameEntity{
             Heart.WIDTH,
             Heart.HEIGHT
         );
+        // Set hitbox offsets to position 
+        this.hitboxOffsets.set(4, 10, -8, -10);
         
-        // Set hitbox offsets
-        this.hitboxOffsets.set(4, 2, 4, -4);
+        // update hitbox after setting offsets
+        this.hitbox.set(
+            this.position.x + this.hitboxOffsets.position.x,
+            this.position.y + this.hitboxOffsets.position.y,
+            this.dimensions.x + this.hitboxOffsets.dimensions.x,
+            this.dimensions.y + this.hitboxOffsets.dimensions.y,
+        );
         
         this.currentSprite = this.sprites[4];
+    }
+
+    update(dt) {
+        // Update hitbox position and size based on offsets
+        this.hitbox.set(
+            this.position.x + this.hitboxOffsets.position.x,
+            this.position.y + this.hitboxOffsets.position.y,
+            this.dimensions.x + this.hitboxOffsets.dimensions.x,
+            this.dimensions.y + this.hitboxOffsets.dimensions.y,
+        );
     }
 
     /**
