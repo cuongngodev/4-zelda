@@ -1,4 +1,5 @@
 import {
+	generateRandomBoolean,
 	getRandomPositiveInteger,
 	pickRandomElement,
 } from '../../lib/Random.js';
@@ -9,7 +10,7 @@ import Player from '../entities/Player.js';
 import Direction from '../enums/Direction.js';
 import EnemyType from '../enums/EnemyType.js';
 import ImageName from '../enums/ImageName.js';
-import { CANVAS_HEIGHT, CANVAS_WIDTH, images } from '../globals.js';
+import { CANVAS_HEIGHT, CANVAS_WIDTH, HEART_SPAWN_CHANCE, images } from '../globals.js';
 import Doorway from './Doorway.js';
 import Switch from './Switch.js';
 import Tile from './Tile.js';
@@ -187,8 +188,9 @@ export default class Room {
 		if (enemy.didCollideWithEntity(this.player.swordHitbox)) {
 			enemy.receiveDamage(this.player.damage);
 			
-			// Spawn heart when enemy is hit (but not dead yet)
-			if (!enemy.isDead) {
+			// Spawn heart when enemy is hit (but not dead yet) 
+			// and 35% change of heart spawning
+			if (!enemy.isDead && generateRandomBoolean(HEART_SPAWN_CHANCE)) {
 				this.spawnHeartAt(enemy.position.x, enemy.position.y);
 			}
 		}
