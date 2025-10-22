@@ -14,6 +14,8 @@ import Doorway from './Doorway.js';
 import Switch from './Switch.js';
 import Tile from './Tile.js';
 import Heart from '../entities/Heart.js';
+import Skeleton from '../entities/enemies/Skeleton.js';
+import Enemy from '../entities/enemies/Enemy.js';
 
 export default class Room {
 	static WIDTH = CANVAS_WIDTH / Tile.TILE_SIZE - 2;
@@ -66,7 +68,6 @@ export default class Room {
 		this.doorways = this.generateDoorways();
 		this.objects = this.generateObjects();
 		this.renderQueue = this.buildRenderQueue();
-		this.heart = new Heart()
 		
 		// Used for drawing when this room is the next room, adjacent to the active.
 		this.adjacentOffset = new Vector();
@@ -79,12 +80,11 @@ export default class Room {
 		this.cleanUpEntities();
 		this.updateEntities(dt);
 		this.updateObjects(dt);
-		this.checkConsumeHeart();
 	}
 
 	render() {
 		this.renderTiles();
-		this.heart.render();
+
 		this.renderQueue.forEach((elementToRender) => {
 			elementToRender.render(this.adjacentOffset);
 		});
@@ -125,57 +125,90 @@ export default class Room {
 
 	cleanUpEntities() {
 		this.entities = this.entities.filter((entity) => !entity.isDead);
-		
 	}
 
-	checkConsumeHeart() {
-		// Check if heart exists and player collides with it
-		if (this.heart && !this.heart.isDead && this.player.didCollideWithEntity(this.heart.hitbox)) {
-			this.heart.consume(this.player);
-			console.log("collide heart");
-		}
+	/**
+	 * Spawns a heart at the specified position and adds it to entities
+	 * @param {number} x - X coordinate where to spawn the heart
+	 * @param {number} y - Y coordinate where to spawn the heart
+	 */
+	spawnHeartAt(x, y) {
+		const heart = new Heart(new Vector(x, y));
+		this.entities.push(heart);
 	}
+
 	updateEntities(dt) {
 		this.entities.forEach((entity) => {
+			// Mark dead entities
 			if (entity.health <= 0) {
 				entity.isDead = true;
 			}
 
-			// Disallow the player to control the character while shifting.
-			if (
-				!this.isShifting ||
-				(this.isShifting && entity !== this.player)
-			) {
+			// Update entity (skip player during room shifting)
+			if (!this.isShifting || (this.isShifting && entity !== this.player)) {
 				entity.update(dt);
 			}
 
-			this.objects.forEach((object) => {
-				if (object.didCollideWithEntity(entity.hitbox)) {
-					if (object.isCollidable) {
-						object.onCollision(entity);
-					}
-				}
-			});
+			// Handle object collisions for all entities
+			this.handleObjectCollisions(entity);
 
-			// Since the player is technically always colliding with itself, skip it.
+			// Skip further processing for the player entity
 			if (entity === this.player) {
 				return;
 			}
 
-			if (entity.didCollideWithEntity(this.player.swordHitbox)) {
-				entity.receiveDamage(this.player.damage);
-			}
-
-			if (
-				!entity.isDead &&
-				this.player.didCollideWithEntity(entity.hitbox) &&
-				!this.player.isInvulnerable
-			) {
-				this.player.receiveDamage(entity.damage);
-				this.player.becomeInvulnerable();
+			// Handle different entity types
+			if (entity instanceof Enemy) {
+				this.handleEnemyInteractions(entity);
+			} else if (entity instanceof Heart) {
+				this.handleHeartInteractions(entity);
 			}
 		});
-		
+	}
+
+	/**
+	 * Handle collisions between entities and room objects
+	 */
+	handleObjectCollisions(entity) {
+		this.objects.forEach((object) => {
+			if (object.didCollideWithEntity(entity.hitbox)) {
+				if (object.isCollidable) {
+					object.onCollision(entity);
+				}
+			}
+		});
+	}
+
+	/**
+	 * Handle all enemy-related interactions (combat, damage, etc.)
+	 */
+	handleEnemyInteractions(enemy) {
+		// Enemy hit by player's sword
+		if (enemy.didCollideWithEntity(this.player.swordHitbox)) {
+			enemy.receiveDamage(this.player.damage);
+			
+			// Spawn heart when enemy is hit (but not dead yet)
+			if (!enemy.isDead) {
+				this.spawnHeartAt(enemy.position.x, enemy.position.y);
+			}
+		}
+
+		// Enemy damages player 
+		if (!enemy.isDead && 
+			this.player.didCollideWithEntity(enemy.hitbox) && 
+			!this.player.isInvulnerable) {
+			this.player.receiveDamage(enemy.damage);
+			this.player.becomeInvulnerable();
+		}
+	}
+
+	/**
+	 * Handle heart-player consumption
+	 */
+	handleHeartInteractions(heart) {
+		if (!heart.isDead && this.player.didCollideWithEntity(heart.hitbox)) {
+			heart.consume(this.player);
+		}
 	}
 
 	updateObjects(dt) {

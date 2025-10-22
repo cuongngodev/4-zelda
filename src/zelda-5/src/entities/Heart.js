@@ -10,9 +10,9 @@ export default class Heart extends GameEntity{
     static WIDTH = 16;
 	static HEIGHT = 16;
 
-    constructor(){
+    constructor(position){
         super({
-            position: new Vector(Room.CENTER_X - Heart.WIDTH / 2, Room.CENTER_Y - Heart.HEIGHT / 2),
+            position: position || new Vector(Room.CENTER_X - Heart.WIDTH / 2, Room.CENTER_Y - Heart.HEIGHT / 2),
             dimensions: new Vector(Heart.WIDTH, Heart.HEIGHT),
             health: 2 // restores 2 health points
         });
