@@ -17,6 +17,7 @@ import Tile from './Tile.js';
 import Heart from '../entities/Heart.js';
 import Skeleton from '../entities/enemies/Skeleton.js';
 import Enemy from '../entities/enemies/Enemy.js';
+import Pot from './Pot.js';
 
 export default class Room {
 	static WIDTH = CANVAS_WIDTH / Tile.TILE_SIZE - 2;
@@ -176,6 +177,21 @@ export default class Room {
 				if (object.isCollidable) {
 					object.onCollision(entity);
 				}
+			}
+		});
+	}
+
+	/**
+	 * Handle sword interactions with objects (breaking pots, etc.)
+	 */
+	handlePotObjectInteractions() {
+		this.objects.forEach((object) => {
+			if (object instanceof Pot) {
+				// do something here
+				//1st not allow player pass through pot
+				//2nd if hit enter, pot tween up 
+				// Handle tween depend on direction
+				//3rd if pot is broken, spawn heart
 			}
 		});
 	}
@@ -360,13 +376,38 @@ export default class Room {
 
 		return entities;
 	}
+	generatePots(minPots, maxPots) {
+		const pots = [];
+		const numPots = getRandomPositiveInteger(minPots, maxPots);
 
+		for (let i = 0; i < numPots; i++) {
+			pots.push(
+				new Pot(
+					new Vector(Pot.WIDTH, Pot.HEIGHT),
+					new Vector(
+						getRandomPositiveInteger(
+							Room.LEFT_EDGE + Pot.WIDTH,
+							Room.RIGHT_EDGE - Pot.WIDTH * 2
+						),
+						getRandomPositiveInteger(
+							Room.TOP_EDGE + Pot.HEIGHT,
+							Room.BOTTOM_EDGE - Pot.HEIGHT * 2
+						)
+					),
+					this
+				)
+			);
+		}
+
+		return pots;
+	}
 	/**
 	 * @returns An array of objects for the player to interact with.
 	 */
 	generateObjects() {
 		const objects = [];
 
+		// Add switch
 		objects.push(
 			new Switch(
 				new Vector(Switch.WIDTH, Switch.HEIGHT),
@@ -383,7 +424,11 @@ export default class Room {
 				this
 			)
 		);
+
+		// Add doorways
 		objects.push(...this.doorways);
+		// Add pots
+		objects.push(...this.generatePots(1,3))
 
 		return objects;
 	}

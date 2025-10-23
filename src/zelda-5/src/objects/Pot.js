@@ -25,7 +25,7 @@ export default class Pot extends GameObject {
             potConfig
         );
         
-        this.currentFrame = this.sprites.small[0]; // get the pot sprite
+        this.currentFrame = this.sprites.medium[0]; // get the pot sprite
         this.room = room;
 
         // Set hitbox offsets - make the hitbox smaller and positioned at the bottom of the pot
