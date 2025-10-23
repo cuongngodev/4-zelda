@@ -6,6 +6,7 @@ const ImageName = {
 	PlayerWalk: 'player_walk',
 	Tiles: 'tiles',
 	Switches: 'switches',
+	Pots: 'pots'
 };
 
 export default ImageName;
