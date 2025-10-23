@@ -41,6 +41,12 @@
 			"path": "./assets/images/switches.png",
 			"width": 32,
 			"height": 18
+		},
+		{
+			"name": "pots",
+			"path": "./assets/images/pots.png",
+			"width": 256,
+			"height": 256
 		}
 	],
 	"fonts": [
