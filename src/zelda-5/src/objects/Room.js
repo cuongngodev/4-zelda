@@ -59,6 +59,9 @@ export default class Room {
 	 */
 	constructor(player, isShifting = false) {
 		this.player = player;
+		// Set the player's reference to this room
+		this.player.currentRoom = this;
+		
 		this.dimensions = new Vector(Room.WIDTH, Room.HEIGHT);
 		this.sprites = Sprite.generateSpritesFromSpriteSheet(
 			images.get(ImageName.Tiles),
@@ -186,12 +189,14 @@ export default class Room {
 	 */
 	handlePotObjectInteractions() {
 		this.objects.forEach((object) => {
-			if (object instanceof Pot) {
+			if (object instanceof Pot && !object.isBroken) {
+				// object.onCollision(this.player.swordHitbox);
 				// do something here
 				//1st not allow player pass through pot
 				//2nd if hit enter, pot tween up 
 				// Handle tween depend on direction
 				//3rd if pot is broken, spawn heart
+
 			}
 		});
 	}
