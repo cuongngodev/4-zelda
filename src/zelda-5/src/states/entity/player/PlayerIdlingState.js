@@ -5,6 +5,7 @@ import Direction from '../../../enums/Direction.js';
 import PlayerStateName from '../../../enums/PlayerStateName.js';
 import { input } from '../../../globals.js';
 import Input from '../../../../lib/Input.js';
+import Pot from '../../../objects/Pot.js';
 
 export default class PlayerIdlingState extends State {
 	/**
@@ -33,6 +34,7 @@ export default class PlayerIdlingState extends State {
 	update() {
 		this.checkForMovement();
 		this.checkForSwordSwing();
+		this.checkForLiftingObject();
 	}
 
 	checkForMovement() {
@@ -55,5 +57,66 @@ export default class PlayerIdlingState extends State {
 		if (input.isKeyPressed(Input.KEYS.SPACE)) {
 			this.player.changeState(PlayerStateName.SwordSwinging);
 		}
+	}
+	checkForLiftingObject() {
+		if (input.isKeyPressed(Input.KEYS.ENTER)) {
+			const nearbyPot = this.findNearbyLiftableObject();
+			if (nearbyPot) {
+				this.player.changeState(PlayerStateName.Lifting, nearbyPot);
+			} else {
+				// No liftable object found nearby
+			}
+		}
+	}
+
+	/**
+	 * Find a liftable object (like a pot) near the player
+	 * @returns {GameObject|null} The object to lift, or null if none found
+	 */
+	findNearbyLiftableObject() {
+		if (!this.player.currentRoom) {
+			return null;
+		}
+
+		const LIFT_RANGE = 20; // How close the player needs to be to lift an object
+		const DIRECTION_OFFSET = 16; // How far in front of the player to check
+
+		// Calculate the search position based on player's direction
+		let searchX = this.player.position.x;
+		let searchY = this.player.position.y;
+
+		switch (this.player.direction) {
+			case Direction.Up:
+				searchY -= DIRECTION_OFFSET;
+				break;
+			case Direction.Down:
+				searchY += DIRECTION_OFFSET;
+				break;
+			case Direction.Left:
+				searchX -= DIRECTION_OFFSET;
+				break;
+			case Direction.Right:
+				searchX += DIRECTION_OFFSET;
+				break;
+		}
+
+
+		// Search through all objects in the room
+		for (const object of this.player.currentRoom.objects) {
+			// Check if object is a pot and not broken
+			if (object instanceof Pot && !object.isBroken) {
+				// Simple rectangular distance check (much faster than Euclidean)
+				const deltaX = Math.abs(searchX - object.position.x);
+				const deltaY = Math.abs(searchY - object.position.y);
+
+				// If pot is within lifting range (rectangular area), return it
+				if (deltaX <= LIFT_RANGE && deltaY <= LIFT_RANGE) {
+					return object;
+				}
+			}
+		}
+
+		// No liftable objects found nearby
+		return null;
 	}
 }
