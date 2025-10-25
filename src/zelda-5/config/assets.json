@@ -25,6 +25,18 @@
 			"height": 128
 		},
 		{
+			"name": "player_lift",
+			"path": "./assets/images/player_lift.png",
+			"width": 64,
+			"height": 128
+		},
+		{
+			"name": "player_carry",
+			"path": "./assets/images/player_carry.png",
+			"width": 64,
+			"height": 128
+		},
+		{
 			"name": "enemies",
 			"path": "./assets/images/enemies.png",
 			"width": 192,
