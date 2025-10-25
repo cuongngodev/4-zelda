@@ -1,10 +1,12 @@
 import Sprite from "../../lib/Sprite.js";
 import Vector from "../../lib/Vector.js";
 import Hitbox from "../../lib/Hitbox.js";
+import Easing from "../../lib/Easing.js";
 import ImageName from "../enums/ImageName.js";
-import { images, DEBUG, context } from "../globals.js";
+import Direction from "../enums/Direction.js";
+import { images, DEBUG, context, timer } from "../globals.js";
 import GameObject from "./GameObject.js";
-import { loadPotSprites, potConfig } from "../../config/SpriteConfig.js";
+import { loadSprites, potConfig } from "../../config/SpriteConfig.js";
 
 export default class Pot extends GameObject {
     static WIDTH = 16;
@@ -20,7 +22,7 @@ export default class Pot extends GameObject {
         this.isSolid = true;
         this.isBroken = false;
 
-        this.sprites = loadPotSprites(
+        this.sprites = loadSprites(
             images.get(ImageName.Pots),
             potConfig
         );
@@ -28,9 +30,7 @@ export default class Pot extends GameObject {
         this.currentFrame = this.sprites.medium[0]; // get the pot sprite
         this.room = room;
 
-        // Set hitbox offsets - make the hitbox smaller and positioned at the bottom of the pot
-        // Offset position by (2, 16) and reduce dimensions by (-4, -16) for better collision
-        // this.hitboxOffsets.set(12, 24, -12, -26);
+        this.hitboxOffsets.set(2, 16, -4, -24);
         
         // Update hitbox after setting offsets
         this.hitbox.set(
@@ -69,6 +69,9 @@ export default class Pot extends GameObject {
      * @param {*} entity 
      */
     onCollision(entity) {
-
+        if (!this.isBroken) {
+            super.onCollision(entity);
+        }
     }
+   
 }
