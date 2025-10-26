@@ -13,7 +13,9 @@ import Direction from '../enums/Direction.js';
 import SoundName from '../enums/SoundName.js';
 import PlayerLiftingState from '../states/entity/player/PlayerLiftingState.js';
 import { loadSprites, playerLiftConfig } from '../../config/SpriteConfig.js';
-import PlayerCarryingState from '../states/entity/player/PlayerCarryingState.js';
+import PlayerCarryingIdleState from '../states/entity/player/PlayerCarryingIdleState.js';
+import PlayerCarryingWalkingState from '../states/entity/player/PlayerCarryingWalkingState.js';
+import PlayerThrowingState from '../states/entity/player/PlayerThrowingState.js';
 
 export default class Player extends GameEntity {
 	static WIDTH = 16;
@@ -131,7 +133,9 @@ export default class Player extends GameEntity {
 		stateMachine.add(PlayerStateName.SwordSwinging, new PlayerSwordSwingingState(this));
 		stateMachine.add(PlayerStateName.Lifting, new PlayerLiftingState(this));
 		stateMachine.add(PlayerStateName.Idle, new PlayerIdlingState(this));
-		stateMachine.add(PlayerStateName.Carrying, new PlayerCarryingState(this));
+		stateMachine.add(PlayerStateName.CarryingIdle, new PlayerCarryingIdleState(this));
+		stateMachine.add(PlayerStateName.CarryingWalking, new PlayerCarryingWalkingState(this));
+		stateMachine.add(PlayerStateName.Throwing, new PlayerThrowingState(this));
 		stateMachine.change(PlayerStateName.Idle);
 
 		return stateMachine;
