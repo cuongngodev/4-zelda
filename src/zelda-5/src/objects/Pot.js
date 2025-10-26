@@ -102,7 +102,8 @@ export default class Pot extends GameObject {
         // Check collision with entities (enemies, hearts, etc.)
         this.room.entities.forEach((entity) => {
             if (entity.isDead || !entity.hitbox) return;
-            
+             // Skip collision with player during throwing
+            if (entity instanceof Player) return;
             // Check if pot collides with entity
             if (this.didCollideWithEntity(entity.hitbox)) {
                 this.onHitEntity(entity);
