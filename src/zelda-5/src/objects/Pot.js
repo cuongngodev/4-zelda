@@ -39,6 +39,7 @@ export default class Pot extends GameObject {
             this.dimensions.x + this.hitboxOffsets.dimensions.x,
             this.dimensions.y + this.hitboxOffsets.dimensions.y,
         );
+        this.player;
     }
 
     render(offset = { x: 0, y: 0 }) {
@@ -73,5 +74,45 @@ export default class Pot extends GameObject {
             super.onCollision(entity);
         }
     }
-   
+    
+ /**
+     * Called when the pot is lifted by the player, a tween is started to lift the pot,
+     * it is going upwards to the player head.
+     * 
+     */
+    onLift(player) {
+        // Disable collision while being lifted
+        this.isCollidable = false;
+        this.isSolid = false;
+        
+        // Calculate target position (above player's head)
+        const targetX = player.position.x;
+        const targetY = player.position.y - this.dimensions.y+15;
+        // Store the original position
+        const startX = this.position.x;
+        const startY = this.position.y;
+        
+        // Create a smooth lifting animation using easeOutQuad for natural movement
+        timer.tweenAsync(
+            this.position,
+            {
+                x: targetX,
+                y: targetY
+            },
+            0.5,
+            Easing.easeOutQuad,
+  
+        );
+    }
+    onDrop(player) {
+        // Re-enable collision when dropped
+     
+        
+        // Position the pot at the player's current position
+
+    }
+    onThrow(targetX, targetY) {
+        // Logic for throwing the pot towards targetX, targetY
+        // This could involve setting a velocity and updating position over time
+    }
 }
