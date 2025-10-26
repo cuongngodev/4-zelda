@@ -3,6 +3,7 @@ import {
 	getRandomPositiveInteger,
 	pickRandomElement,
 } from '../../lib/Random.js';
+import { isAABBCollision } from '../../lib/CollisionHelpers.js';
 import Sprite from '../../lib/Sprite.js';
 import Vector from '../../lib/Vector.js';
 import EnemyFactory from '../services/EnemyFactory.js';
@@ -386,31 +387,85 @@ export default class Room {
 
 		return entities;
 	}
-	generatePots(minPots, maxPots) {
+	generatePots(minPots, maxPots, existingObjects = []) {
 		const pots = [];
 		const numPots = getRandomPositiveInteger(minPots, maxPots);
+		const maxAttempts = 50; // Maximum attempts to find a non-overlapping position
 
 		for (let i = 0; i < numPots; i++) {
-			pots.push(
-				new Pot(
-					new Vector(Pot.WIDTH, Pot.HEIGHT),
-					new Vector(
-						getRandomPositiveInteger(
-							Room.LEFT_EDGE + Pot.WIDTH,
-							Room.RIGHT_EDGE - Pot.WIDTH * 2
-						),
-						getRandomPositiveInteger(
-							Room.TOP_EDGE + Pot.HEIGHT,
-							Room.BOTTOM_EDGE - Pot.HEIGHT * 2
-						)
+			let attempts = 0;
+			let validPosition = false;
+			let potPosition;
+
+			// Try to find a non-overlapping position
+			while (!validPosition && attempts < maxAttempts) {
+				attempts++;
+				
+				// Generate random position
+				potPosition = new Vector(
+					getRandomPositiveInteger(
+						Room.LEFT_EDGE + Pot.WIDTH,
+						Room.RIGHT_EDGE - Pot.WIDTH * 2
 					),
-					this
-				)
-			);
+					getRandomPositiveInteger(
+						Room.TOP_EDGE + Pot.HEIGHT,
+						Room.BOTTOM_EDGE - Pot.HEIGHT * 2
+					)
+				);
+
+				// Check if this position overlaps with existing objects
+				validPosition = this.isValidObjectPosition(
+					potPosition.x, 
+					potPosition.y, 
+					Pot.WIDTH, 
+					Pot.HEIGHT, 
+					[...existingObjects, ...pots] // Check against existing objects and already placed pots
+				);
+			}
+
+			// Only add pot if we found a valid position
+			if (validPosition) {
+				pots.push(
+					new Pot(
+						new Vector(Pot.WIDTH, Pot.HEIGHT),
+						potPosition,
+						this
+					)
+				);
+			}
 		}
 
 		return pots;
 	}
+
+	/**
+	 * Check if a position is valid (doesn't overlap with existing objects)
+	 * @param {number} x - X position to check
+	 * @param {number} y - Y position to check  
+	 * @param {number} width - Width of object to place
+	 * @param {number} height - Height of object to place
+	 * @param {Array} existingObjects - Array of existing objects to check against
+	 * @returns {boolean} True if position is valid (no overlaps)
+	 */
+	isValidObjectPosition(x, y, width, height, existingObjects) {
+		const margin = 16; // Minimum distance between objects
+		
+		// Check against all existing objects
+		for (const obj of existingObjects) {
+			if (!obj.position || !obj.dimensions) continue;
+			
+			// Use AABB collision detection with margin
+			if (isAABBCollision(
+				x - margin, y - margin, width + margin * 2, height + margin * 2,
+				obj.position.x, obj.position.y, obj.dimensions.x, obj.dimensions.y
+			)) {
+				return false; // Overlap detected
+			}
+		}
+		
+		return true; // No overlaps found
+	}
+
 	/**
 	 * @returns An array of objects for the player to interact with.
 	 */
@@ -418,27 +473,27 @@ export default class Room {
 		const objects = [];
 
 		// Add switch
-		objects.push(
-			new Switch(
-				new Vector(Switch.WIDTH, Switch.HEIGHT),
-				new Vector(
-					getRandomPositiveInteger(
-						Room.LEFT_EDGE + Switch.WIDTH,
-						Room.RIGHT_EDGE - Switch.WIDTH * 2
-					),
-					getRandomPositiveInteger(
-						Room.TOP_EDGE + Switch.HEIGHT,
-						Room.BOTTOM_EDGE - Switch.HEIGHT * 2
-					)
+		const switchObj = new Switch(
+			new Vector(Switch.WIDTH, Switch.HEIGHT),
+			new Vector(
+				getRandomPositiveInteger(
+					Room.LEFT_EDGE + Switch.WIDTH,
+					Room.RIGHT_EDGE - Switch.WIDTH * 2
 				),
-				this
-			)
+				getRandomPositiveInteger(
+					Room.TOP_EDGE + Switch.HEIGHT,
+					Room.BOTTOM_EDGE - Switch.HEIGHT * 2
+				)
+			),
+			this
 		);
+		objects.push(switchObj);
 
 		// Add doorways
 		objects.push(...this.doorways);
-		// Add pots
-		objects.push(...this.generatePots(1,3))
+		
+		// Add pots (pass existing objects to avoid overlaps)
+		objects.push(...this.generatePots(2, 5, objects));
 
 		return objects;
 	}
