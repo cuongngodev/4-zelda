@@ -7,6 +7,7 @@ import Direction from "../enums/Direction.js";
 import { images, DEBUG, context, timer } from "../globals.js";
 import GameObject from "./GameObject.js";
 import { loadSprites, potConfig } from "../../config/SpriteConfig.js";
+import Animation from "../../lib/Animation.js";
 
 export default class Pot extends GameObject {
     static WIDTH = 16;
@@ -29,8 +30,10 @@ export default class Pot extends GameObject {
         
         this.currentFrame = this.sprites.medium[0]; // get the pot sprite
         this.room = room;
-
-        this.hitboxOffsets.set(2, 16, -4, -24);
+        // Create frame indices array for shattering animation
+        const shatterFrameIndices = this.sprites.shateringMedium.map((_, index) => index);
+        this.shateringAnimation = new Animation(shatterFrameIndices, 0.2, 1); // Play once
+        this.hitboxOffsets.set(4, 15, -8, -25);
         
         // Update hitbox after setting offsets
         this.hitbox.set(
@@ -39,14 +42,22 @@ export default class Pot extends GameObject {
             this.dimensions.x + this.hitboxOffsets.dimensions.x,
             this.dimensions.y + this.hitboxOffsets.dimensions.y,
         );
-        this.player;
     }
 
     render(offset = { x: 0, y: 0 }) {
         const x = this.position.x + offset.x;
         const y = this.position.y + offset.y;
 
-        if (this.currentFrame) {
+        if (this.isBroken) {
+            // Render shattering animation when broken
+            const frameIndex = this.shateringAnimation.getCurrentFrame();
+            const shatterSprite = this.sprites.shateringMedium[frameIndex];
+            if (shatterSprite) {
+                //render the shattering animation
+                shatterSprite.render(Math.floor(x), Math.floor(y));
+            }
+        } else if (this.currentFrame) {
+            // Render normal pot sprite when not broken
             this.currentFrame.render(Math.floor(x), Math.floor(y));
         }
 
@@ -63,6 +74,12 @@ export default class Pot extends GameObject {
                 this.dimensions.x + this.hitboxOffsets.dimensions.x,
                 this.dimensions.y + this.hitboxOffsets.dimensions.y,
             );
+        }else {
+            // Update shatering animation
+            this.shateringAnimation.update(dt);
+            if (this.shateringAnimation.isDone()) {
+                this.isDead = true; // Mark for removal after shatering animation
+            }
         }
     }
     /**
@@ -80,7 +97,7 @@ export default class Pot extends GameObject {
      * it is going upwards to the player head.
      * 
      */
-    onLift(player) {
+    async onLift(player) {
         // Disable collision while being lifted
         this.isCollidable = false;
         this.isSolid = false;
@@ -93,7 +110,7 @@ export default class Pot extends GameObject {
         const startY = this.position.y;
         
         // Create a smooth lifting animation using easeOutQuad for natural movement
-        timer.tweenAsync(
+        await timer.tweenAsync(
             this.position,
             {
                 x: targetX,
@@ -104,15 +121,41 @@ export default class Pot extends GameObject {
   
         );
     }
-    onDrop(player) {
-        // Re-enable collision when dropped
-     
+    /**
+     * Called when the pot is thrown
+     * @param {*} targetX Target X coordinate 
+     * @param {*} targetY Target Y coordinate
+     */
+    async onThrow(targetX, targetY) {
+       
+        this.isCollidable = false;
+        this.isSolid = false;
+        const startX = this.position.x;
+        const startY = this.position.y;
         
-        // Position the pot at the player's current position
-
+        // Calculate throw duration based on distance
+        const distance = Math.sqrt((targetX - startX) ** 2 + (targetY - startY) ** 2);
+        const throwDuration = Math.min(distance / 200, 1.0); // Max 1 second
+        
+        // Throwing effect
+        await timer.tweenAsync(
+            this.position,
+            {
+                x: targetX,
+                y: targetY
+            },
+            throwDuration,
+            Easing.easeInQuad
+        )
+        this.onLand();
     }
-    onThrow(targetX, targetY) {
-        // Logic for throwing the pot towards targetX, targetY
-        // This could involve setting a velocity and updating position over time
+    /**
+     * Called when the pot lands after being thrown
+     */
+    onLand() {
+        // Disable collision and solid properties since pot is breaking
+        this.isCollidable = false;
+        this.isSolid = false;
+        this.isBroken = true;
     }
 }
