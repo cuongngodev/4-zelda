@@ -48,8 +48,8 @@ document.body.prepend(canvas);
 // Add all the states to the state machine.
 stateMachine.add(GameStateName.Transition, new TransitionState());
 stateMachine.add(GameStateName.GameOver, new GameOverState());
-stateMachine.add(GameStateName.Play, new PlayState());
 stateMachine.add(GameStateName.TitleScreen, new TitleScreenState());
+stateMachine.add(GameStateName.Play, new PlayState());
 
 const game = new Game(stateMachine, context, canvas.width, canvas.height);
 

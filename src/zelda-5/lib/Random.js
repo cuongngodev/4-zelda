@@ -12,3 +12,5 @@ export const pickRandomElement = (list) => list[getRandomPositiveInteger(0, list
  * @returns True chance% of the time.
  */
 export const didSucceedChance = (chance) => getRandomPositiveInteger(1, 100) <= chance * 100;
+
+export const generateRandomBoolean = (percentage) => Math.random() < percentage;

@@ -1,4 +1,5 @@
 import {
+	generateRandomBoolean,
 	getRandomPositiveInteger,
 	pickRandomElement,
 } from '../../lib/Random.js';
@@ -9,10 +10,14 @@ import Player from '../entities/Player.js';
 import Direction from '../enums/Direction.js';
 import EnemyType from '../enums/EnemyType.js';
 import ImageName from '../enums/ImageName.js';
-import { CANVAS_HEIGHT, CANVAS_WIDTH, images } from '../globals.js';
+import { CANVAS_HEIGHT, CANVAS_WIDTH, HEART_SPAWN_CHANCE, images } from '../globals.js';
 import Doorway from './Doorway.js';
 import Switch from './Switch.js';
 import Tile from './Tile.js';
+import Heart from '../entities/Heart.js';
+import Skeleton from '../entities/enemies/Skeleton.js';
+import Enemy from '../entities/enemies/Enemy.js';
+import Pot from './Pot.js';
 
 export default class Room {
 	static WIDTH = CANVAS_WIDTH / Tile.TILE_SIZE - 2;
@@ -54,6 +59,9 @@ export default class Room {
 	 */
 	constructor(player, isShifting = false) {
 		this.player = player;
+		// Set the player's reference to this room
+		this.player.currentRoom = this;
+		
 		this.dimensions = new Vector(Room.WIDTH, Room.HEIGHT);
 		this.sprites = Sprite.generateSpritesFromSpriteSheet(
 			images.get(ImageName.Tiles),
@@ -65,7 +73,7 @@ export default class Room {
 		this.doorways = this.generateDoorways();
 		this.objects = this.generateObjects();
 		this.renderQueue = this.buildRenderQueue();
-
+		
 		// Used for drawing when this room is the next room, adjacent to the active.
 		this.adjacentOffset = new Vector();
 
@@ -75,6 +83,7 @@ export default class Room {
 	update(dt) {
 		this.renderQueue = this.buildRenderQueue();
 		this.cleanUpEntities();
+		this.cleanUpObjects();
 		this.updateEntities(dt);
 		this.updateObjects(dt);
 	}
@@ -116,7 +125,6 @@ export default class Room {
 			} else {
 				order = 1;
 			}
-
 			return order;
 		});
 	}
@@ -125,46 +133,110 @@ export default class Room {
 		this.entities = this.entities.filter((entity) => !entity.isDead);
 	}
 
+	cleanUpObjects() {
+		this.objects = this.objects.filter((object) => !object.isDead);
+	}
+
+	/**
+	 * Spawns a heart at the specified position and adds it to entities
+	 * @param {number} x - X coordinate where to spawn the heart
+	 * @param {number} y - Y coordinate where to spawn the heart
+	 */
+	spawnHeartAt(x, y) {
+		const heart = new Heart(new Vector(x, y));
+		this.entities.push(heart);
+	}
+
 	updateEntities(dt) {
 		this.entities.forEach((entity) => {
+			// Mark dead entities
 			if (entity.health <= 0) {
 				entity.isDead = true;
 			}
 
-			// Disallow the player to control the character while shifting.
-			if (
-				!this.isShifting ||
-				(this.isShifting && entity !== this.player)
-			) {
+			// Update entity (skip player during room shifting)
+			if (!this.isShifting || (this.isShifting && entity !== this.player)) {
 				entity.update(dt);
 			}
 
-			this.objects.forEach((object) => {
-				if (object.didCollideWithEntity(entity.hitbox)) {
-					if (object.isCollidable) {
-						object.onCollision(entity);
-					}
-				}
-			});
+			// Handle object collisions for all entities
+			this.handleObjectCollisions(entity);
 
-			// Since the player is technically always colliding with itself, skip it.
+			// Skip further processing for the player entity
 			if (entity === this.player) {
 				return;
 			}
 
-			if (entity.didCollideWithEntity(this.player.swordHitbox)) {
-				entity.receiveDamage(this.player.damage);
-			}
-
-			if (
-				!entity.isDead &&
-				this.player.didCollideWithEntity(entity.hitbox) &&
-				!this.player.isInvulnerable
-			) {
-				this.player.receiveDamage(entity.damage);
-				this.player.becomeInvulnerable();
+			// Handle different entity types
+			if (entity instanceof Enemy) {
+				this.handleEnemyInteractions(entity);
+			} else if (entity instanceof Heart) {
+				this.handleHeartInteractions(entity);
 			}
 		});
+	}
+
+	/**
+	 * Handle collisions between entities and room objects
+	 */
+	handleObjectCollisions(entity) {
+		this.objects.forEach((object) => {
+			if (object.didCollideWithEntity(entity.hitbox)) {
+				if (object.isCollidable) {
+					object.onCollision(entity);
+				}
+			}
+		});
+	}
+
+	/**
+	 * Handle sword interactions with objects (breaking pots, etc.)
+	 */
+	handlePotObjectInteractions() {
+		this.objects.forEach((object) => {
+			if (object instanceof Pot && !object.isBroken) {
+				// object.onCollision(this.player.swordHitbox);
+				// do something here
+				//1st not allow player pass through pot
+				//2nd if hit enter, pot tween up 
+				// Handle tween depend on direction
+				//3rd if pot is broken, spawn heart
+
+			}
+		});
+	}
+
+	/**
+	 * Handle all enemy-related interactions (combat, damage, etc.)
+	 */
+	handleEnemyInteractions(enemy) {
+		// Enemy hit by player's sword
+		if (enemy.didCollideWithEntity(this.player.swordHitbox)) {
+			enemy.receiveDamage(this.player.damage);
+			
+			// Spawn heart when enemy is hit (but not dead yet) 
+			// and 35% change of heart spawning
+			if (!enemy.isDead && generateRandomBoolean(HEART_SPAWN_CHANCE)) {
+				this.spawnHeartAt(enemy.position.x, enemy.position.y);
+			}
+		}
+
+		// Enemy damages player 
+		if (!enemy.isDead && 
+			this.player.didCollideWithEntity(enemy.hitbox) && 
+			!this.player.isInvulnerable) {
+			this.player.receiveDamage(enemy.damage);
+			this.player.becomeInvulnerable();
+		}
+	}
+
+	/**
+	 * Handle heart-player consumption
+	 */
+	handleHeartInteractions(heart) {
+		if (!heart.isDead && this.player.didCollideWithEntity(heart.hitbox)) {
+			heart.consume(this.player);
+		}
 	}
 
 	updateObjects(dt) {
@@ -310,18 +382,42 @@ export default class Room {
 		for (let i = 0; i < 10; i++) {
 			entities.push(EnemyFactory.createInstance(enemyType, sprites));
 		}
-
 		entities.push(this.player);
 
 		return entities;
 	}
+	generatePots(minPots, maxPots) {
+		const pots = [];
+		const numPots = getRandomPositiveInteger(minPots, maxPots);
 
+		for (let i = 0; i < numPots; i++) {
+			pots.push(
+				new Pot(
+					new Vector(Pot.WIDTH, Pot.HEIGHT),
+					new Vector(
+						getRandomPositiveInteger(
+							Room.LEFT_EDGE + Pot.WIDTH,
+							Room.RIGHT_EDGE - Pot.WIDTH * 2
+						),
+						getRandomPositiveInteger(
+							Room.TOP_EDGE + Pot.HEIGHT,
+							Room.BOTTOM_EDGE - Pot.HEIGHT * 2
+						)
+					),
+					this
+				)
+			);
+		}
+
+		return pots;
+	}
 	/**
 	 * @returns An array of objects for the player to interact with.
 	 */
 	generateObjects() {
 		const objects = [];
 
+		// Add switch
 		objects.push(
 			new Switch(
 				new Vector(Switch.WIDTH, Switch.HEIGHT),
@@ -338,7 +434,11 @@ export default class Room {
 				this
 			)
 		);
+
+		// Add doorways
 		objects.push(...this.doorways);
+		// Add pots
+		objects.push(...this.generatePots(1,3))
 
 		return objects;
 	}

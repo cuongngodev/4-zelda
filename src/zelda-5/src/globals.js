@@ -15,6 +15,7 @@ const assetDefinition = await fetch('./config/assets.json').then((response) =>
 
 export const CANVAS_WIDTH = 384;
 export const CANVAS_HEIGHT = 208;
+export const HEART_SPAWN_CHANCE = 0.35; // 0.35% chance
 
 const resizeCanvas = () => {
 	const scaleX = window.innerWidth / CANVAS_WIDTH;
@@ -44,4 +45,4 @@ images.load(assetDefinition.images);
 fonts.load(assetDefinition.fonts);
 
 // If true, render all hitboxes.
-export const DEBUG = false;
+export const DEBUG = true;

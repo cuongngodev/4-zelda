@@ -11,6 +11,11 @@ import Sprite from '../../lib/Sprite.js';
 import Room from '../objects/Room.js';
 import Direction from '../enums/Direction.js';
 import SoundName from '../enums/SoundName.js';
+import PlayerLiftingState from '../states/entity/player/PlayerLiftingState.js';
+import { loadSprites, playerLiftConfig } from '../../config/SpriteConfig.js';
+import PlayerCarryingIdleState from '../states/entity/player/PlayerCarryingIdleState.js';
+import PlayerCarryingWalkingState from '../states/entity/player/PlayerCarryingWalkingState.js';
+import PlayerThrowingState from '../states/entity/player/PlayerThrowingState.js';
 
 export default class Player extends GameEntity {
 	static WIDTH = 16;
@@ -42,6 +47,20 @@ export default class Player extends GameEntity {
 			Player.SWORD_SWINGING_SPRITE_WIDTH,
 			Player.SWORD_SWINGING_SPRITE_HEIGHT
 		);
+		
+		// Use your custom loadSprites function with playerLiftConfig
+		this.liftingSprites = Sprite.generateSpritesFromSpriteSheet(
+			images.get(ImageName.PlayerLifting),
+			Player.WALKING_SPRITE_WIDTH,
+			Player.WALKING_SPRITE_HEIGHT
+		);
+
+		this.carryingSprites = Sprite.generateSpritesFromSpriteSheet(
+			images.get(ImageName.PlayerCarrying),
+			Player.WALKING_SPRITE_WIDTH,
+			Player.WALKING_SPRITE_HEIGHT
+		);
+		
 		this.sprites = this.walkingSprites;
 
 		/**
@@ -77,6 +96,7 @@ export default class Player extends GameEntity {
 		this.isInvulnerable = false;
 		this.alpha = 1;
 		this.invulnerabilityTimer = null;
+		this.currentRoom = null; // Reference to the current room
 		this.stateMachine = this.initializeStateMachine();
 	}
 
@@ -110,12 +130,12 @@ export default class Player extends GameEntity {
 		const stateMachine = new StateMachine();
 
 		stateMachine.add(PlayerStateName.Walking, new PlayerWalkingState(this));
-		stateMachine.add(
-			PlayerStateName.SwordSwinging,
-			new PlayerSwordSwingingState(this)
-		);
+		stateMachine.add(PlayerStateName.SwordSwinging, new PlayerSwordSwingingState(this));
+		stateMachine.add(PlayerStateName.Lifting, new PlayerLiftingState(this));
 		stateMachine.add(PlayerStateName.Idle, new PlayerIdlingState(this));
-
+		stateMachine.add(PlayerStateName.CarryingIdle, new PlayerCarryingIdleState(this));
+		stateMachine.add(PlayerStateName.CarryingWalking, new PlayerCarryingWalkingState(this));
+		stateMachine.add(PlayerStateName.Throwing, new PlayerThrowingState(this));
 		stateMachine.change(PlayerStateName.Idle);
 
 		return stateMachine;
