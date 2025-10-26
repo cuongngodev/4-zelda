@@ -19,10 +19,10 @@ export default class PlayerCarryingState extends State {
         this.object = object;
 
         this.animation = {
-			[Direction.Up]: new Animation([8, 9, 10, 11], 0.2),
-			[Direction.Down]: new Animation([0,1,2,3], 0.2),
-			[Direction.Right]: new Animation([4,5,6,7], 0.2),
-			[Direction.Left]: new Animation([12,13,14,15], 0.2),
+			[Direction.Up]: new Animation([8, 9, 10, 11], 0.2,1),
+			[Direction.Down]: new Animation([0,1,2,3], 0.2,1),
+			[Direction.Right]: new Animation([4,5,6,7], 0.2,1),
+			[Direction.Left]: new Animation([12,13,14,15], 1,1),
 		};
         this.idleLiftingAnimation = {
             [Direction.Up]: new Animation([8], 1),
@@ -38,8 +38,9 @@ export default class PlayerCarryingState extends State {
     }
 
     update(dt) {
-    this.player.currentAnimation = this.animation[this.player.direction];
-
+        this.player.currentAnimation = this.animation[this.player.direction];
+        // Update the lifting animation
+        this.player.currentAnimation.update(dt);
 		if (input.isKeyPressed(Input.KEYS.S)) {
 			this.player.direction = Direction.Down;
 			this.player.position.y += this.player.speed * dt;
