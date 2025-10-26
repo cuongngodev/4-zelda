@@ -83,6 +83,7 @@ export default class Room {
 	update(dt) {
 		this.renderQueue = this.buildRenderQueue();
 		this.cleanUpEntities();
+		this.cleanUpObjects();
 		this.updateEntities(dt);
 		this.updateObjects(dt);
 	}
@@ -130,6 +131,10 @@ export default class Room {
 
 	cleanUpEntities() {
 		this.entities = this.entities.filter((entity) => !entity.isDead);
+	}
+
+	cleanUpObjects() {
+		this.objects = this.objects.filter((object) => !object.isDead);
 	}
 
 	/**
