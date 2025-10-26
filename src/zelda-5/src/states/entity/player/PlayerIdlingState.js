@@ -100,17 +100,37 @@ export default class PlayerIdlingState extends State {
 				break;
 		}
 
-
 		// Search through all objects in the room
 		for (const object of this.player.currentRoom.objects) {
 			// Check if object is a pot and not broken
 			if (object instanceof Pot && !object.isBroken) {
-				// Simple rectangular distance check (much faster than Euclidean)
+				// Calculate distances
 				const deltaX = Math.abs(searchX - object.position.x);
 				const deltaY = Math.abs(searchY - object.position.y);
 
-				// If pot is within lifting range (rectangular area), return it
-				if (deltaX <= LIFT_RANGE && deltaY <= LIFT_RANGE) {
+				// Directional check: ensure pot is actually in front of player
+				let isInFront = false;
+				const playerToPotX = object.position.x - this.player.position.x;
+				const playerToPotY = object.position.y - this.player.position.y;
+
+				switch (this.player.direction) {
+					case Direction.Up:
+						isInFront = playerToPotY < 0 && Math.abs(playerToPotX) <= LIFT_RANGE;
+						break;
+					case Direction.Down:
+						isInFront = playerToPotY > 0 && Math.abs(playerToPotX) <= LIFT_RANGE;
+						break;
+					case Direction.Left:
+						isInFront = playerToPotX < 0 && Math.abs(playerToPotY) <= LIFT_RANGE;
+						break;
+					case Direction.Right:
+						isInFront = playerToPotX > 0 && Math.abs(playerToPotY) <= LIFT_RANGE;
+						break;
+				}
+
+				// Check if pot is in front and within range
+				if (isInFront && deltaX <= LIFT_RANGE && deltaY <= LIFT_RANGE) {
+					console.log("Found Pot");
 					return object;
 				}
 			}
