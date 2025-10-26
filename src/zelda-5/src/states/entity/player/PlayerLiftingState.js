@@ -36,18 +36,18 @@ export default class PlayerLiftingState extends State {
         this.player.sprites = this.player.liftingSprites;
         this.player.currentAnimation = this.animation[this.player.direction];
         
-        // Start the lifting animation on the pot
-        if (this.pot && this.pot.onLift) {
+        // Start the lifting animation on the pot only if the pot has not broken
+        if (this.pot && this.pot.onLift && !this.pot.isBroken) {
             this.pot.onLift(this.player);
         }
     }
 
     update(dt) {        
-        // Check if lifting animation is complete
+        // Check if lifting animation is complete -> change to CarryingIdle State
         if (this.player.currentAnimation.isDone() && !this.isLiftingComplete) {
             this.player.currentAnimation.refresh();
             this.isLiftingComplete = true;
-            this.player.changeState(PlayerStateName.Carrying, this.pot);
+            this.player.changeState(PlayerStateName.CarryingIdle, this.pot);
 
         }
         
