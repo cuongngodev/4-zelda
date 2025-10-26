@@ -32,15 +32,23 @@ export default class PlayerCarryingState extends State {
         };
     }
 
-    enter() {
+    enter(pot) {
+        this.pot = pot;
         this.player.sprites = this.player.carryingSprites;
         this.player.currentAnimation = this.animation[this.player.direction];
+        
+        // Position the pot above the player's head when entering carrying state
+        if (this.pot) {
+            this.updatePotPosition();
+        }
     }
 
     update(dt) {
         this.player.currentAnimation = this.animation[this.player.direction];
         // Update the lifting animation
         this.player.currentAnimation.update(dt);
+        
+        // Handle movement and update pot position
 		if (input.isKeyPressed(Input.KEYS.S)) {
 			this.player.direction = Direction.Down;
 			this.player.position.y += this.player.speed * dt;
@@ -52,6 +60,7 @@ export default class PlayerCarryingState extends State {
 				this.player.position.y =
 					Room.BOTTOM_EDGE - this.player.dimensions.y;
 			}
+			this.updatePotPosition();
 		} else if (input.isKeyPressed(Input.KEYS.D)) {
 			this.player.direction = Direction.Right;
 			this.player.position.x += this.player.speed * dt;
@@ -63,6 +72,7 @@ export default class PlayerCarryingState extends State {
 				this.player.position.x =
 					Room.RIGHT_EDGE - this.player.dimensions.x;
 			}
+			this.updatePotPosition();
 		} else if (input.isKeyPressed(Input.KEYS.W)) {
 			this.player.direction = Direction.Up;
 			this.player.position.y -= this.player.speed * dt;
@@ -74,6 +84,7 @@ export default class PlayerCarryingState extends State {
 				this.player.position.y =
 					Room.TOP_EDGE - this.player.dimensions.y;
 			}
+			this.updatePotPosition();
 		} else if (input.isKeyPressed(Input.KEYS.A)) {
 			this.player.direction = Direction.Left;
 			this.player.position.x -= this.player.speed * dt;
@@ -81,9 +92,22 @@ export default class PlayerCarryingState extends State {
 			if (this.player.position.x <= Room.LEFT_EDGE) {
 				this.player.position.x = Room.LEFT_EDGE;
 			}
+			this.updatePotPosition();
 		} else {
             this.player.currentAnimation = this.idleLiftingAnimation[this.player.direction];
 		}
+    }
+
+    updatePotPosition() {
+        if (this.pot) {
+            // Position the pot above the player's head
+            let offsetX = 0;
+            let offsetY = -this.pot.dimensions.y + 15; 
+            
+            // Update pot position relative to player
+            this.pot.position.x = this.player.position.x + offsetX;
+            this.pot.position.y = this.player.position.y + offsetY;
+        }
     }
 
     handleMovement(dt){
