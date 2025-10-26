@@ -9,10 +9,12 @@ export const potConfig = {
         { x: 8*15, y: 8*2 , width: 8*3, height: 8*3 }, 
     ],
     medium: [
-        { x: 8*1, y: 8*5 , width: 8*2, height: 8*3 }, 
+        { x: 8*1, y: 8*5 , width: 8*2, height: 8*3 },  
+    ],
+    shateringMedium: [
         { x: 8*5, y: 8*5 , width: 8*3, height: 8*3 }, 
         { x: 8*8, y: 8*5 , width: 8*4, height: 8*3 }, 
-        { x: 8*12, y: 8*5 , width: 8*4, height: 8*3 }, 
+        { x: 8*12, y: 8*5 , width: 8*4, height: 8*3 },
     ],
     large: [
         { x: 16*1, y: 16*9 , width: 16, height: 24 }, 
