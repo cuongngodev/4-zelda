@@ -79,7 +79,7 @@ export default class PlayerIdlingState extends State {
 		}
 
 		const LIFT_RANGE = 8; // How close the player needs to be to lift an object
-		const DIRECTION_OFFSET = 5; // How far in front of the player to check
+		const DIRECTION_OFFSET = 8; // How far in front of the player to check
 
 		// Calculate the search position based on player's direction
 		let searchX = this.player.position.x;
