@@ -11,6 +11,7 @@ import Animation from "../../lib/Animation.js";
 import { isAABBCollision } from "../../lib/CollisionHelpers.js";
 import Enemy from "../entities/enemies/Enemy.js";
 import Player from "../entities/Player.js";
+import Room from "./Room.js";
 
 export default class Pot extends GameObject {
     static WIDTH = 16;
@@ -98,7 +99,10 @@ export default class Pot extends GameObject {
      */
     checkThrowCollisions() {
         if (!this.room) return;
-        
+         // First check wall/boundary collisions
+        if (this.checkWallCollisions()) {
+            return; // Exit early if hit a wall
+        }
         // Check collision with entities (enemies, hearts, etc.)
         this.room.entities.forEach((entity) => {
             if (entity.isDead || !entity.hitbox) return;
@@ -121,6 +125,37 @@ export default class Pot extends GameObject {
                 return;
             }
         });
+    }
+    
+     /**
+     * Check if pot is colliding with room walls/boundaries
+     * @returns {boolean} True if collision detected
+     */
+    checkWallCollisions() {
+        const potLeft = this.position.x;
+        const potRight = this.position.x + this.dimensions.x;
+        const potTop = this.position.y;
+        const potBottom = this.position.y + this.dimensions.y;
+        
+        // Check if pot hits any room boundary
+        if (potLeft <= Room.LEFT_EDGE || 
+            potRight >= Room.RIGHT_EDGE || 
+            potTop <= Room.TOP_EDGE- this.dimensions.y ||  // to avoid shattering early
+            potBottom >= Room.BOTTOM_EDGE + this.dimensions.y) {
+            
+           
+            this.onHitWall();
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Called when pot hits a wall
+     */
+    onHitWall() {
+        this.onHitSomething();
     }
     
     /**
