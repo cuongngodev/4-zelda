@@ -57,8 +57,10 @@ export default class Room {
 	 * with its own set of enemies and a switch that can open the doors.
 	 *
 	 * @param {Player} player
+	 * @param {boolean} isShifting
+	 * @param {Pot} carriedPot - Pot being carried by player (optional)
 	 */
-	constructor(player, isShifting = false) {
+	constructor(player, isShifting = false, carriedPot = null) {
 		this.player = player;
 		// Set the player's reference to this room
 		this.player.currentRoom = this;
@@ -72,7 +74,7 @@ export default class Room {
 		this.tiles = this.generateWallsAndFloors();
 		this.entities = this.generateEntities();
 		this.doorways = this.generateDoorways();
-		this.objects = this.generateObjects();
+		this.objects = this.generateObjects(carriedPot);
 		this.renderQueue = this.buildRenderQueue();
 		
 		// Used for drawing when this room is the next room, adjacent to the active.
@@ -467,9 +469,10 @@ export default class Room {
 	}
 
 	/**
+	 * @param {Pot} carriedPot - Pot being carried by player (optional)
 	 * @returns An array of objects for the player to interact with.
 	 */
-	generateObjects() {
+	generateObjects(carriedPot = null) {
 		const objects = [];
 
 		// Add switch
@@ -491,6 +494,13 @@ export default class Room {
 
 		// Add doorways
 		objects.push(...this.doorways);
+		
+		// Add carried pot if player is carrying one
+		if (carriedPot) {
+			// Update the pot's room reference
+			carriedPot.room = this;
+			objects.push(carriedPot);
+		}
 		
 		// Add pots (pass existing objects to avoid overlaps)
 		objects.push(...this.generatePots(2, 5, objects));
