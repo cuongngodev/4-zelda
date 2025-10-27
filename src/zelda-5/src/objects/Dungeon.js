@@ -1,6 +1,7 @@
 import EventName from '../enums/EventName.js';
 import Player from '../entities/Player.js';
 import Direction from '../enums/Direction.js';
+import PlayerStateName from '../enums/PlayerStateName.js';
 import {
 	canvas,
 	CANVAS_HEIGHT,
@@ -29,6 +30,9 @@ export default class Dungeon {
 
 		// Room we're moving the camera to during a shift and becomes active room afterwards.
 		this.nextRoom = null;
+
+		// Store carried pot during room transitions
+		this.carriedPotDuringTransition = null;
 
 		// Use the camera values when shifting screens with translate().
 		this.camera = new Vector();
@@ -103,7 +107,10 @@ export default class Dungeon {
 	}
 
 	prepareRoomAndPlayerForShift(nextRoomPosition) {
-		this.nextRoom = new Room(this.player, this.isShifting);
+		// Get the carried pot before creating the new room
+		this.carriedPotDuringTransition = this.player.getCarriedPot();
+		
+		this.nextRoom = new Room(this.player, this.isShifting, this.carriedPotDuringTransition);
 
 		this.nextRoom.openDoors();
 		this.nextRoom.adjacentOffset.set(
@@ -214,6 +221,30 @@ export default class Dungeon {
 			this.player.position.y =
 				Room.RENDER_OFFSET_Y + this.player.dimensions.y / 2;
 			this.player.direction = Direction.Down;
+		}
+		this.checkCarriedPotDuringTransition();
+	}
+	/**
+	 * Check if the player is carrying a pot during the room transition
+	 * and set the appropriate state and pot position after transition.
+	 */
+	checkCarriedPotDuringTransition() {
+
+		// Set the appropriate state based on whether player is carrying an object
+		if (this.player.isCarryingObject && this.carriedPotDuringTransition) {
+			// Pass the carried pot to the carrying state
+			this.player.changeState(PlayerStateName.CarryingIdle, this.carriedPotDuringTransition);
+			
+			// Update carried pot position after player position is set
+			if (this.carriedPotDuringTransition) {
+				
+				this.carriedPotDuringTransition.onCarriedUpdate(this.player);
+			}
+			
+			// Clear the stored pot reference
+			this.carriedPotDuringTransition = null;
+		} else {
+			this.player.stateMachine.change(PlayerStateName.Idle);
 		}
 	}
 }

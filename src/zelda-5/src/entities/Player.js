@@ -168,8 +168,8 @@ export default class Player extends GameEntity {
 	}
 
 	/**
-	 * Get the pot that the player is currently carrying, it track the pot is 
-	 * hold throughout the states (CarryIdling, CarryWalking), if any
+	 * Detects if player is carrying something (pot), then get the pot that the player is currently carrying, 
+	 * it track the pot is hold throughout the states (CarryIdling, CarryWalking), if any
 	 * @returns {Pot|null} The carried pot or null if not carrying
 	 */
 	getCarriedPot() {
