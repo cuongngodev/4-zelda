@@ -97,6 +97,7 @@ export default class Player extends GameEntity {
 		this.alpha = 1;
 		this.invulnerabilityTimer = null;
 		this.currentRoom = null; // Reference to the current room
+		this.isCarryingObject = false; // Flag to track if player is carrying an object
 		this.stateMachine = this.initializeStateMachine();
 	}
 
@@ -123,6 +124,7 @@ export default class Player extends GameEntity {
 		this.alpha = 1;
 		this.invulnerabilityTimer?.clear();
 		this.direction = Direction.Down;
+		this.isCarryingObject = false;
 		this.stateMachine.change(PlayerStateName.Idle);
 	}
 
@@ -163,5 +165,28 @@ export default class Player extends GameEntity {
 		};
 
 		return timer.addTask(action, interval, duration, callback);
+	}
+
+	/**
+	 * Get the pot that the player is currently carrying, it track the pot is 
+	 * hold throughout the states (CarryIdling, CarryWalking), if any
+	 * @returns {Pot|null} The carried pot or null if not carrying
+	 */
+	getCarriedPot() {
+		// States that hold the pot reference: CarryingIdleState, CarryingWalkingState, LiftingState
+		if (this.isCarryingObject && this.stateMachine.currentState) {
+			const currentState = this.stateMachine.currentState;
+			return currentState.pot || null;
+		}
+		return null;
+	}
+
+	/**
+	 * Change the player's state
+	 * @param {string} stateName - The name of the state to change to
+	 * @param {*} enterParameters - Parameters to pass to the enter method
+	 */
+	changeState(stateName, enterParameters) {
+		this.stateMachine.change(stateName, enterParameters);
 	}
 }
