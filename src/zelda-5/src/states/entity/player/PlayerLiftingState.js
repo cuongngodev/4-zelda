@@ -32,6 +32,7 @@ export default class PlayerLiftingState extends State {
 
     enter(pot) {
         this.pot = pot;
+        this.pot.isCarried = true;
         this.isLiftingComplete = false;
         this.player.sprites = this.player.liftingSprites;
         this.player.currentAnimation = this.animation[this.player.direction];
@@ -47,6 +48,7 @@ export default class PlayerLiftingState extends State {
         if (this.player.currentAnimation.isDone() && !this.isLiftingComplete) {
             this.player.currentAnimation.refresh();
             this.isLiftingComplete = true;
+            this.player.isCarryingObject = true; // Set flag when lifting is complete
             this.player.changeState(PlayerStateName.CarryingIdle, this.pot);
 
         }

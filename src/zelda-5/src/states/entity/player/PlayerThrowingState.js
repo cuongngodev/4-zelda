@@ -30,6 +30,7 @@ export default class PlayerThrowingState extends State {
         
         // Start the throwing animation and throw the pot
         this.onThrow();
+        this.pot.isCarried = false;
     }
 
     update(dt) {
@@ -37,7 +38,8 @@ export default class PlayerThrowingState extends State {
         
         // Check if throwing animation and the pot's throw action are complete
         if (this.player.currentAnimation.isDone()&& this.pot.isBroken) {
-            // Return to idle state after throwing
+            // Clear the carrying flag and return to idle state after throwing
+            this.player.isCarryingObject = false;
             this.player.changeState(PlayerStateName.Idle);
         }
     }
