@@ -4,11 +4,12 @@ import Hitbox from "../../lib/Hitbox.js";
 import Easing from "../../lib/Easing.js";
 import ImageName from "../enums/ImageName.js";
 import Direction from "../enums/Direction.js";
-import { images, DEBUG, context, timer } from "../globals.js";
+import { images, DEBUG, context, timer, HEART_SPAWN_CHANCE } from "../globals.js";
 import GameObject from "./GameObject.js";
 import { loadSprites, potConfig } from "../../config/SpriteConfig.js";
 import Animation from "../../lib/Animation.js";
 import { isAABBCollision } from "../../lib/CollisionHelpers.js";
+import { generateRandomBoolean } from "../../lib/Random.js";
 import Enemy from "../entities/enemies/Enemy.js";
 import Player from "../entities/Player.js";
 import Room from "./Room.js";
@@ -27,7 +28,7 @@ export default class Pot extends GameObject {
         this.isSolid = true;
         this.isBroken = false;
         this.isBeingThrown = false;
-
+        this.isCarried = false;
         this.sprites = loadSprites(
             images.get(ImageName.Pots),
             potConfig
@@ -163,8 +164,9 @@ export default class Pot extends GameObject {
      * @param {GameEntity} entity The entity that was hit
      */
     onHitEntity(entity) {
-        // If it's an enemy, kill it
+        // If it's an enemy, kill it spawn a heart
         if (entity instanceof Enemy) {
+            this.room.spawnHeartAt(entity.position.x, entity.position.y);            
             entity.isDead = true;
         }
         
@@ -295,5 +297,17 @@ export default class Pot extends GameObject {
         
         // Reset and start the shattering animation
         this.shateringAnimation.refresh();
+    }
+    /**
+     * Update the position of the pot while being carried by the player
+     * @param {*} player 
+     */
+    onCarriedUpdate(player) {
+        // Position the pot above the player's head
+        let offsetX = 0;
+        let offsetY = -this.dimensions.y + 15; 
+        
+        this.position.x = player.position.x + offsetX;
+        this.position.y = player.position.y + offsetY;
     }
 }
