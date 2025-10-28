@@ -45,4 +45,4 @@ images.load(assetDefinition.images);
 fonts.load(assetDefinition.fonts);
 
 // If true, render all hitboxes.
-export const DEBUG = true;
+export const DEBUG = false;
